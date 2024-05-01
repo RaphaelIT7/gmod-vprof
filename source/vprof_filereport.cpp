@@ -58,6 +58,7 @@ void hook_CVProfile_OutputReport(void* funky_class, int type, const tchar* pszSt
 	{
 		std::string str = ss.str();
 		fs->Write(str.c_str(), str.length(), fh);  
+		Msg("Wrote vprof report into %s\n", filename.c_str());
 
 		fs->Close(fh);
 	}
