@@ -53,7 +53,7 @@ void hook_CVProfile_OutputReport(void* funky_class, int type, const tchar* pszSt
 
 	std::string filename = GetCurrentTime();
 	filename = "vprof/" + filename + ".txt";
-	FileHandle_t fh = fs->Open(filename.c_str(), "a+", "MOD");
+	FileHandle_t fh = fs->Open(filename.c_str(), "w+", "MOD");
 	if (fh)
 	{
 		std::string str = ss.str();
@@ -63,7 +63,7 @@ void hook_CVProfile_OutputReport(void* funky_class, int type, const tchar* pszSt
 		fs->Close(fh);
 	}
 
-	ss.clear();
+	ss.str("");
 }
 
 void AddVProfExport()
