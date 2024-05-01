@@ -5,6 +5,7 @@ NOTE: This project currently only works on Linux 32x
 Currently, this module adds two new convars.
 
 ### vprof_showhooks
+#### Enabled by default
 Causes VProf to show the name of the Lua hooks getting called.  
 > Gmod request: https://github.com/Facepunch/garrysmod-requests/issues/2374
 
@@ -18,6 +19,7 @@ Causes VProf to show the name of the Lua hooks getting called.
 ```
 
 ### vprof_exportreport
+#### Enabled by default
 Causes VProf to export a report into a file in the `vprof/` folder.
 
 ## How to load
