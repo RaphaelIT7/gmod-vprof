@@ -1,0 +1,13 @@
+name: Build
+
+on: [push, pull_request, workflow_dispatch]
+
+jobs:
+  build:
+    uses: RaphaelIT7/gmod-common-module-base/.github/workflows/compile.yml@workflow
+    with:
+      PROJECT_NAME: "vprof"
+      BUILD_64x: "false"
+      BUILD_WINDOWS: "false"
+      REALM: "sv"
+      ARTIFACT_EXPIRE: "1"
