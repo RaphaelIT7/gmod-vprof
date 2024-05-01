@@ -5,7 +5,8 @@ NOTE: This project currently only works on Linux 32x
 Currently, this module adds two new convars.
 
 ### vprof_showhooks
-Causes VProf to show the name of the Lua hooks getting called.
+Causes VProf to show the name of the Lua hooks getting called.  
+> Gmod request: https://github.com/Facepunch/garrysmod-requests/issues/2374
 
 #### Example
 `CLuaGamemode::Call` is listed twice because the first one is our custom one and the second one is the original.
