@@ -48,8 +48,16 @@ void hook_CVProfile_OutputReport(void* funky_class, int type, const tchar* pszSt
 	SpewOutputFunc(original_spew);
 
 	IFileSystem* fs = InterfacePointers::FileSystem();
-	if (!fs->IsDirectory("vprof", "MOD") && !fs->FileExists("vprof", "MOD"))
+	if (!fs->IsDirectory("vprof", "MOD"))
+	{
+		if (fs->FileExists("vprof", "MOD"))
+		{
+			Msg("vprof/ is a file? Please delete it or disable vprof_exportreport.\n");
+			return;
+		}
+
 		fs->CreateDirHierarchy("vprof", "MOD");
+	}
 
 	std::string filename = GetCurrentTime();
 	filename = "vprof/" + filename + ".txt";
