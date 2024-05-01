@@ -61,6 +61,8 @@ void hook_CVProfile_OutputReport(void* funky_class, int type, const tchar* pszSt
 
 		fs->Close(fh);
 	}
+
+	ss.clear();
 }
 
 void AddVProfExport()
