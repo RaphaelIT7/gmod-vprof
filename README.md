@@ -1,5 +1,5 @@
 This project tries to improve vprof by adding new commands and convars.  
-NOTE: This project currently only works on Linux 32x  
+NOTE: This project currently only works on 32x  
 
 ## What does this add?
 Currently, this module adds two new convars.
@@ -9,13 +9,24 @@ Currently, this module adds two new convars.
 Causes VProf to show the name of the Lua hooks getting called.  
 > Gmod request: https://github.com/Facepunch/garrysmod-requests/issues/2374
 
-#### Example
+#### Example on Linux
 `CLuaGamemode::Call` is listed twice because the first one is our custom one and the second one is the original.
 ```lua
        |  |  |  |  |  |  CLuaGamemode::Call (Think)
        |  |  |  |  |  |  |  CLuaGamemode::Call
        |  |  |  |  |  |  |  |  CBaseLuaInterface::GetType
        |  |  |  |  |  |  |  |  CLuaInterface::CallFunctionProtected
+```
+
+#### Example on Windows
+On Windows, the results currently are different because I can't detour the CLuaGamemode without breaking it :<  
+So now you see the hook name in `CLuaInterface::PushPooledString (Hook name here)`
+```lua
+|  |  CLuaGamemode::Call
+|  |  |  CLuaInterface::PushPooledString (Tick)
+|  |  |  CBaseLuaInterface::GetType
+|  |  |  CLuaInterface::CallFunctionProtected
+|  |  |  CLuaInterface::PushPooledString (Think)
 ```
 
 ### vprof_exportreport
