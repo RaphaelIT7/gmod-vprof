@@ -22,67 +22,119 @@ std::string GetCurrentTime() {
 }
 
 std::stringstream ss;
-static SpewRetval_t VProf_Spew(SpewType_t type, const char *msg)
-{
-	ss << msg;
-	return SPEW_CONTINUE;
-}
-
-Detouring::Hook detour_CVProfile_OutputReport;
-void hook_CVProfile_OutputReport(void* funky_class, int type, const tchar* pszStartMode, int budgetGroupID)
-{
-	if (!vprof_exportreport.GetBool())
-	{
-		detour_CVProfile_OutputReport.GetTrampoline<CVProfile_OutputReport>()(funky_class, type, pszStartMode, budgetGroupID);
-		return;
+bool vprof_workaround = false;
+SpewOutputFunc_t original_spew;
+extern SpewRetval_t VProf_Spew(SpewType_t type, const char *msg);
+extern SpewRetval_t VProfCheck_Spew(SpewType_t type, const char *msg);
+class CVProfileProxy : public Detouring::ClassProxy<CVProfile, CVProfileProxy> {
+public:
+	CVProfileProxy(CVProfile prof) {
+		if (CheckValue("initialize", "CVProfileProxy", Initialize(&prof))) // Debug
+		{
+			CheckValue("CVProfile::OutputReport", Hook(&CVProfile::OutputReport, &CVProfileProxy::OutputReport));
+		} else {
+#ifdef SYSTEM_WINDOWS
+			Msg("Falling back to a workaround for vprof_exportreport!\n"); // This should only happen on Windows!
+			vprof_workaround = true;
+			original_spew = GetSpewOutputFunc();
+			SpewOutputFunc(VProfCheck_Spew);
+#endif
+		}
 	}
 
-
-	SpewOutputFunc_t original_spew = GetSpewOutputFunc();
-
-	original_spew = GetSpewOutputFunc();
-	SpewOutputFunc(VProf_Spew);
-
-	detour_CVProfile_OutputReport.GetTrampoline<CVProfile_OutputReport>()(funky_class, type, pszStartMode, budgetGroupID);
-
-	SpewOutputFunc(original_spew);
-
-	IFileSystem* fs = InterfacePointers::FileSystem();
-	if (!fs->IsDirectory("vprof", "MOD"))
+	void DeInit()
 	{
-		if (fs->FileExists("vprof", "MOD"))
+		UnHook(&CVProfile::OutputReport);
+	}
+
+	void BeginDump()
+	{
+		last_spew = GetSpewOutputFunc();
+		SpewOutputFunc(VProf_Spew);
+	}
+
+	void FinishDump()
+	{
+		SpewOutputFunc(last_spew);
+
+		IFileSystem* fs = InterfacePointers::FileSystem();
+		if (!fs->IsDirectory("vprof", "MOD"))
 		{
-			Msg("vprof/ is a file? Please delete it or disable vprof_exportreport.\n");
+			if (fs->FileExists("vprof", "MOD"))
+			{
+				Msg("vprof/ is a file? Please delete it or disable vprof_exportreport.\n");
+				return;
+			}
+
+			fs->CreateDirHierarchy("vprof", "MOD");
+		}
+
+		std::string filename = GetCurrentTime();
+		filename = "vprof/" + filename + ".txt";
+		FileHandle_t fh = fs->Open(filename.c_str(), "a+", "MOD");
+		if (fh)
+		{
+			std::string str = ss.str();
+			fs->Write(str.c_str(), str.length(), fh);  
+			Msg("Wrote vprof report into %s\n", filename.c_str());
+
+			fs->Close(fh);
+		}
+
+		ss.str("");
+	}
+
+	void OutputReport( int type = VPRT_FULL, const tchar *pszStartNode = NULL, int budgetGroupID = -1 )
+	{
+		if (!vprof_exportreport.GetBool())
+		{
+			Call(&CVProfile::OutputReport, type, pszStartNode, budgetGroupID);
 			return;
 		}
 
-		fs->CreateDirHierarchy("vprof", "MOD");
+		BeginDump();
+
+		Call(&CVProfile::OutputReport, type, pszStartNode, budgetGroupID);
+
+		FinishDump();
 	}
 
-	std::string filename = GetCurrentTime();
-	filename = "vprof/" + filename + ".txt";
-	FileHandle_t fh = fs->Open(filename.c_str(), "a+", "MOD");
-	if (fh)
+	static std::unique_ptr<CVProfileProxy> Singleton;
+protected:
+	SpewOutputFunc_t last_spew;
+};
+std::unique_ptr<CVProfileProxy> CVProfileProxy::Singleton;
+
+static SpewRetval_t VProf_Spew(SpewType_t type, const char *msg)
+{
+	ss << msg;
+	if (vprof_workaround && strcmp(msg, "******** END VPROF REPORT ********\n") == 0)
 	{
-		std::string str = ss.str();
-		fs->Write(str.c_str(), str.length(), fh);  
-		Msg("Wrote vprof report into %s\n", filename.c_str());
+		CVProfileProxy::Singleton->FinishDump();
+	}
+	return SPEW_CONTINUE;
+}
 
-		fs->Close(fh);
+static SpewRetval_t VProfCheck_Spew(SpewType_t type, const char *msg)
+{
+	if (strcmp(msg, "******** BEGIN VPROF REPORT ********\n") == 0)
+	{
+		CVProfileProxy::Singleton->BeginDump();
+		return VProf_Spew(type, msg);
 	}
 
-	ss.str("");
+	return original_spew(type, msg);
 }
 
 void AddVProfExport()
 {
 	RemoveVProfExport();
 
-	SourceSDK::ModuleLoader libtier0_loader("libtier0");
-	CreateDetour(&detour_CVProfile_OutputReport, "CVProfile::OutputReport", libtier0_loader.GetModule(), CVProfile_OutputReportSym, (void*)hook_CVProfile_OutputReport, DETOUR_VPROFEXPORT);
+	CVProfileProxy::Singleton = std::make_unique<CVProfileProxy>(g_VProfCurrentProfile);
 }
 
 void RemoveVProfExport()
 {
-	RemoveDetours(DETOUR_VPROFEXPORT);
+	CVProfileProxy::Singleton->DeInit();
+	CVProfileProxy::Singleton.reset();
 }

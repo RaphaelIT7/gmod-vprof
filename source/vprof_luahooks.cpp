@@ -1,9 +1,10 @@
 #include <GarrysMod/InterfacePointers.hpp>
-#include <GarrysMod/Lua/LuaInterface.h>
 #include <GarrysMod/Lua/LuaShared.h>
 #include <GarrysMod/FactoryLoader.hpp>
+#include <GarrysMod/Lua/LuaInterface.h>
 #include "main.h"
 #include "detours.h"
+#include <memory>
 #include <vprof.h>
 #include <map>
 
@@ -20,16 +21,15 @@ ConVar vprof_showhooks("vprof_showhooks", "1", 0, "If enabled, vprof will show t
 Detouring::Hook detour_CLuaGamemode_CallFinish;
 Detouring::Hook detour_CLuaGamemode_CallWithArgs;
 Detouring::Hook detour_CLuaGamemode_Call;
-Detouring::Hook detour_CLuaInterface_PushPooledString;
 
-GarrysMod::Lua::ILuaInterface* gLUA;
+GarrysMod::Lua::CLuaInterface* gLUA;
 void CheckLua()
 {
 	if (!gLUA)
 	{
 		SourceSDK::FactoryLoader lua_shared_loader("lua_shared");
 		GarrysMod::Lua::ILuaShared* shared = lua_shared_loader.GetInterface<GarrysMod::Lua::ILuaShared>(GMOD_LUASHARED_INTERFACE);
-		gLUA = shared->GetLuaInterface(GarrysMod::Lua::State::SERVER);
+		gLUA = (GarrysMod::Lua::CLuaInterface*)shared->GetLuaInterface(GarrysMod::Lua::State::SERVER);
 
 		if (!gLUA)
 		{
@@ -40,19 +40,33 @@ void CheckLua()
 
 #ifdef SYSTEM_WINDOWS
 std::map<int, std::string> Call_strs;
-void hook_CLuaInterface_PushPooledString(int pool) // BUG: Why does this crash?
-{
-	CheckLua();
-
-	if (Call_strs.find(pool) == Call_strs.end())
-	{
-		Call_strs[pool] = "CLuaInterface::PushPooledString (" + (std::string)gLUA->GetPooledString(pool) + ")";
+class CLuaInterfaceProxy : public Detouring::ClassProxy<GarrysMod::Lua::CLuaInterface, CLuaInterfaceProxy> {
+public:
+	CLuaInterfaceProxy(GarrysMod::Lua::CLuaInterface* LUA) {
+		if (CheckValue("initialize", "CLuaInterfaceProxy", Initialize(LUA)))
+			CheckValue("CLuaInterface::PushPooledString", Hook(&GarrysMod::Lua::CLuaInterface::PushPooledString, &CLuaInterfaceProxy::PushPooledString));
 	}
 
-	VPROF_BUDGET( Call_strs[pool].c_str(), "GMOD" );
+	void DeInit()
+	{
+		UnHook(&GarrysMod::Lua::CLuaInterface::PushPooledString);
+	}
 
-	detour_CLuaInterface_PushPooledString.GetTrampoline<CLuaInterface_PushPooledString>()((void*)gLUA, pool);
-}
+	virtual void PushPooledString(int pool)
+	{
+		if (Call_strs.find(pool) == Call_strs.end())
+		{
+			Call_strs[pool] = "CLuaInterface::PushPooledString (" + (std::string)gLUA->GetPooledString(pool) + ")";
+		}
+
+		VPROF_BUDGET( Call_strs[pool].c_str(), "GMOD" );
+
+		Call(&GarrysMod::Lua::CLuaInterface::PushPooledString, pool);
+	}
+
+	static std::unique_ptr<CLuaInterfaceProxy> Singleton;
+};
+std::unique_ptr<CLuaInterfaceProxy> CLuaInterfaceProxy::Singleton;
 #else
 std::map<int, std::string> CallFinish_strs;
 void* hook_CLuaGamemode_CallFinish(void* funky_srv, int pool)
@@ -104,7 +118,8 @@ void AddLuaHooks()
 
 #ifdef SYSTEM_WINDOWS
 	SourceSDK::ModuleLoader lua_shared_loader("lua_shared");
-	CreateDetour(&detour_CLuaInterface_PushPooledString, "CLuaInterface::PushPooledString", lua_shared_loader.GetModule(), CLuaInterface_PushPooledStringSym, hook_CLuaInterface_PushPooledString, DETOUR_LUAHOOKS);
+	CheckLua();
+	CLuaInterfaceProxy::Singleton = std::make_unique<CLuaInterfaceProxy>(gLUA);
 #else
 	SourceSDK::ModuleLoader server_loader("server");
 	CreateDetour(&detour_CLuaGamemode_CallFinish, "CLuaGamemode::CallFinish", server_loader.GetModule(), CLuaGamemode_CallFinishSym, (void*)hook_CLuaGamemode_CallFinish, DETOUR_LUAHOOKS);
@@ -115,5 +130,10 @@ void AddLuaHooks()
 
 void RemoveLuaHooks()
 {
+#ifdef SYSTEM_WINDOWS
+	CLuaInterfaceProxy::Singleton->DeInit();
+	CLuaInterfaceProxy::Singleton.reset();
+#else
 	RemoveDetours(DETOUR_LUAHOOKS);
+#endif
 }
