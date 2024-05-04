@@ -21,13 +21,8 @@ std::string GetCurrentTime() {
     return ss.str();
 }
 
+std::stringstream ss;
 SpewOutputFunc_t last_spew;
-void BeginDump()
-{
-	last_spew = GetSpewOutputFunc();
-	SpewOutputFunc(VProf_Spew);
-}
-
 void FinishDump()
 {
 	SpewOutputFunc(last_spew);
@@ -59,9 +54,7 @@ void FinishDump()
 	ss.str("");
 }
 
-std::stringstream ss;
 bool vprof_workaround = false;
-SpewOutputFunc_t original_spew;
 static SpewRetval_t VProf_Spew(SpewType_t type, const char *msg)
 {
 	ss << msg;
@@ -72,6 +65,13 @@ static SpewRetval_t VProf_Spew(SpewType_t type, const char *msg)
 	return SPEW_CONTINUE;
 }
 
+void BeginDump()
+{
+	last_spew = GetSpewOutputFunc();
+	SpewOutputFunc(VProf_Spew);
+}
+
+SpewOutputFunc_t original_spew;
 static SpewRetval_t VProfCheck_Spew(SpewType_t type, const char *msg)
 {
 	if (strcmp(msg, "******** BEGIN VPROF REPORT ********\n") == 0)
