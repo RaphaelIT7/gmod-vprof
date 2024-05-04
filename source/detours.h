@@ -8,7 +8,7 @@
 inline bool CheckValue(const char* msg, const char* name, bool ret)
 {
 	if (!ret) {
-		Msg("Failed to %s %s!\n", msg, name);
+		Msg("[vprof] Failed to %s %s!\n", msg, name);
 		return false;
 	}
 
@@ -23,7 +23,7 @@ inline bool CheckValue(const char* name, bool ret)
 template<class T>
 bool CheckFunction(T func, const char* name)
 {
-	return CheckValue("get function", name, func == nullptr);
+	return CheckValue("get function", name, func != nullptr);
 }
 
 enum DETOUR_CATEGOY {
