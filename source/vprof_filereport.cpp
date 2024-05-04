@@ -71,7 +71,7 @@ void BeginDump()
 	SpewOutputFunc(VProf_Spew);
 }
 
-SpewOutputFunc_t original_spew;
+SpewOutputFunc_t original_spew = nullptr;
 static SpewRetval_t VProfCheck_Spew(SpewType_t type, const char *msg)
 {
 	if (strcmp(msg, "******** BEGIN VPROF REPORT ********\n") == 0)
@@ -95,7 +95,8 @@ void AddWindowsWorkaround()
 void RemoveWindowsWorkaround()
 {
 	vprof_workaround = false;
-	SpewOutputFunc(original_spew);
+	if (original_spew)
+		SpewOutputFunc(original_spew);
 }
 #else
 Detouring::Hook detour_CVProfile_OutputReport;

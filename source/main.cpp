@@ -3,27 +3,20 @@
 
 void VProfLoad()
 {
-	cvar = InterfacePointers::Cvar();
+	g_pCVar = InterfacePointers::Cvar();
 
 	if (vprof_showhooks.GetBool())
 		AddLuaHooks();
 
 	AddVProfExport();
 
-	VProfConVar(vprof_exportreport);
-	VProfConVar(vprof_showhooks);
+	ConVar_Register();
 }
 
 void VProfUnload()
 {
 	RemoveLuaHooks();
 	RemoveVProfExport();
-}
 
-void VProfConVar(ConVar convar)
-{
-	if (!convar.IsRegistered())
-	{
-		//cvar->RegisterConCommand((ConCommandBase*)&convar);
-	}
+	ConVar_Unregister();
 }

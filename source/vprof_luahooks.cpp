@@ -52,7 +52,7 @@ public:
 		UnHook(&GarrysMod::Lua::CLuaInterface::PushPooledString);
 	}
 
-	virtual void PushPooledString(int pool)
+	virtual void GMCOMMON_CALLING_CONVENTION PushPooledString(int pool)
 	{
 		if (Call_strs.find(pool) == Call_strs.end())
 		{
