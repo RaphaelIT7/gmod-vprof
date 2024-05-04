@@ -91,6 +91,12 @@ void AddWindowsWorkaround()
 	original_spew = GetSpewOutputFunc();
 	SpewOutputFunc(VProfCheck_Spew);
 }
+
+void RemoveWindowsWorkaround()
+{
+	vprof_workaround = false;
+	SpewOutputFunc(original_spew);
+}
 #else
 Detouring::Hook detour_CVProfile_OutputReport;
 void hook_CVProfile_OutputReport(void* funky_class, int type, const tchar* pszStartMode, int budgetGroupID)
@@ -122,8 +128,7 @@ void AddVProfExport()
 void RemoveVProfExport()
 {
 #ifdef SYSTEM_WINDOWS
-	CVProfileProxy::Singleton->DeInit();
-	CVProfileProxy::Singleton.reset();
+	RemoveWindowsWorkaround();
 #else
 	RemoveDetours(DETOUR_VPROFEXPORT);
 #endif
