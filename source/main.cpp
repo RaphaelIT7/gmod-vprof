@@ -24,6 +24,6 @@ void VProfConVar(ConVar convar)
 {
 	if (!convar.IsRegistered())
 	{
-		cvar->RegisterConCommand((ConCommandBase*)&convar);
+		//cvar->RegisterConCommand((ConCommandBase*)&convar);
 	}
 }
