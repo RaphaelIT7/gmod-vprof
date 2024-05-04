@@ -105,7 +105,7 @@ protected:
 };
 std::unique_ptr<CVProfileProxy> CVProfileProxy::Singleton;
 
-static SpewRetval_t VProf_Spew(SpewType_t type, const char *msg)
+SpewRetval_t VProf_Spew(SpewType_t type, const char *msg)
 {
 	ss << msg;
 	if (vprof_workaround && strcmp(msg, "******** END VPROF REPORT ********\n") == 0)
@@ -115,7 +115,7 @@ static SpewRetval_t VProf_Spew(SpewType_t type, const char *msg)
 	return SPEW_CONTINUE;
 }
 
-static SpewRetval_t VProfCheck_Spew(SpewType_t type, const char *msg)
+SpewRetval_t VProfCheck_Spew(SpewType_t type, const char *msg)
 {
 	if (strcmp(msg, "******** BEGIN VPROF REPORT ********\n") == 0)
 	{

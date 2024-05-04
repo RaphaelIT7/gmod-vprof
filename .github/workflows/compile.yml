@@ -14,6 +14,5 @@ jobs:
     with:
       PROJECT_NAME: "vprof"
       BUILD_64x: "false"
-      BUILD_WINDOWS: "false"
       REALM: "sv"
       ARTIFACT_EXPIRE: "1"
