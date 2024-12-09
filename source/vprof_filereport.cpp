@@ -8,6 +8,7 @@
 #include <chrono>
 #include <ctime>
 #include <iomanip>
+#include <tier0/dbg.h>
 
 ConVar vprof_exportreport("vprof_exportreport", "1");
 
@@ -22,10 +23,14 @@ std::string GetCurrentTime() {
 }
 
 std::stringstream ss;
+#ifdef ARCHITECTURE_X86
 SpewOutputFunc_t last_spew;
+#endif
 void FinishDump()
 {
+#ifdef ARCHITECTURE_X86
 	SpewOutputFunc(last_spew);
+#endif
 
 	IFileSystem* fs = InterfacePointers::FileSystem();
 	if (!fs->IsDirectory("vprof", "MOD"))
@@ -55,6 +60,7 @@ void FinishDump()
 }
 
 bool vprof_workaround = false;
+#ifdef ARCHITECTURE_X86
 static SpewRetval_t VProf_Spew(SpewType_t type, const char *msg)
 {
 	ss << msg;
@@ -82,21 +88,73 @@ static SpewRetval_t VProfCheck_Spew(SpewType_t type, const char *msg)
 
 	return original_spew(type, msg);
 }
+#else
+bool dumping = false;
+Detouring::Hook detour_Msg;
+void hook_Msg(PRINTF_FORMAT_STRING const tchar* pMsgFormat, ...)
+{
+	if (strcmp(pMsgFormat, "******** BEGIN VPROF REPORT ********\n") == 0)
+	{
+		dumping = true;
+	}
+
+	if (dumping)
+	{
+		va_list args;
+		va_start(args, pMsgFormat);
+
+		int size = vsnprintf(NULL, 0, pMsgFormat, args);
+		if (size < 0) {
+			va_end(args);
+		} else {
+			char* buffer = new char[size + 1];
+			vsnprintf(buffer, size + 1, pMsgFormat, args);
+
+			ss << buffer;
+
+			delete[] buffer;
+			va_end(args);
+		}
+
+		if (strcmp(pMsgFormat, "******** END VPROF REPORT ********\n") == 0)
+		{
+			dumping = false;
+			FinishDump();
+		}
+
+		return;
+	}
+
+	va_list args;
+	va_start(args, pMsgFormat);
+	detour_Msg.GetTrampoline<TMsg>()(pMsgFormat, args);
+	va_end(args);
+}
+#endif
 
 #ifdef SYSTEM_WINDOWS
 void AddWindowsWorkaround()
 {
 	Msg("[vprof] Applied a workaround for vprof_exportreport!\n"); // ToDo: Find out why Detouring::ClassProxy breaks for CVProfile
 	vprof_workaround = true;
+#ifdef ARCHITECTURE_X86
 	original_spew = GetSpewOutputFunc();
 	SpewOutputFunc(VProfCheck_Spew);
+#else
+	SourceSDK::ModuleLoader tier0_loader("tier0");
+	CreateDetour(&detour_Msg, "Msg", tier0_loader.GetModule(), MsgSym, (void*)hook_Msg, DETOUR_VPROFEXPORT);
+#endif
 }
 
 void RemoveWindowsWorkaround()
 {
 	vprof_workaround = false;
+#ifdef ARCHITECTURE_X86
 	if (original_spew)
 		SpewOutputFunc(original_spew);
+#else
+	RemoveDetours(DETOUR_VPROFEXPORT);
+#endif
 }
 #else
 Detouring::Hook detour_CVProfile_OutputReport;

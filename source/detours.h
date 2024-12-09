@@ -46,6 +46,7 @@ extern void RemoveDetours(DETOUR_CATEGOY category);
 #define GMCOMMON_CALLING_CONVENTION
 #endif
 
+typedef void (GMCOMMON_CALLING_CONVENTION* TMsg)(PRINTF_FORMAT_STRING const tchar* pMsgFormat, ...);
 typedef void* (GMCOMMON_CALLING_CONVENTION* CLuaGamemode_CallFinish)(void* srv, int pool);
 typedef void* (GMCOMMON_CALLING_CONVENTION* CLuaGamemode_CallWithArgs)(void* srv, int pool);
 typedef void* (GMCOMMON_CALLING_CONVENTION* CLuaGamemode_Call)(void* srv, int pool);
@@ -58,9 +59,10 @@ typedef void (GMCOMMON_CALLING_CONVENTION* CVProfile_OutputReport)(void* srv, in
 //const Symbol CLuaGamemode_CallWithArgsSym = Symbol::FromSignature("\x55\x8B\xEC\x56\x8B\xF1\x8B\x0D\xD4***\x57\x8B\xB9\x0C***\x85\xFF**\x6A\x04\x6A\x00\x68\x48\xA8**\x6A\x00\x68\x40\xAB**\xFF\x15\xDC***\xFF*****\x84\xC0\x75\x0E"); // 55 8B EC 56 8B F1 8B 0D D4 ?? ?? ?? 57 8B B9 0C ?? ?? ?? 85 FF ?? ?? 6A 04 6A 00 68 48 A8 ?? ?? 6A 00 68 40 AB ?? ?? FF 15 DC ?? ?? ?? FF ?? ?? ?? ?? ?? 84 C0 75 0E
 //const Symbol CLuaGamemode_CallSym = Symbol::FromSignature("\x55\x8B\xEC\x56\x8B\xF1\x8B\x0D\xD4***\x57\x8B\xB9\x0C***\x85\xFF************************************************\x8B\x06"); // 55 8B EC 56 8B F1 8B 0D D4 ?? ?? ?? 57 8B B9 0C ?? ?? ?? 85 FF ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? ?? 8B 06 8B CE 8B 80 8C ?? ?? ?? FF D0
 #else
-const Symbol CLuaGamemode_CallFinishSym = Symbol::FromSignature("");
-const Symbol CLuaGamemode_CallWithArgsSym = Symbol::FromSignature("");
-const Symbol CLuaGamemode_CallSym = Symbol::FromSignature("");
+const Symbol MsgSym = Symbol::FromName("Msg");
+//const Symbol CLuaGamemode_CallFinishSym = Symbol::FromSignature("");
+//const Symbol CLuaGamemode_CallWithArgsSym = Symbol::FromSignature("");
+//const Symbol CLuaGamemode_CallSym = Symbol::FromSignature("");
 #endif
 #else
 #ifdef ARCHITECTURE_X86

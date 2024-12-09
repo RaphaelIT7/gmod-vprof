@@ -26,7 +26,7 @@ bool CServerPlugin::Load(CreateInterfaceFn interfaceFactory, CreateInterfaceFn g
 	return true;
 }
 
-//---------------------------------------------------------------------------------
+//---------------------------------------------------------------------b------------
 // Purpose: called when the plugin is unloaded (turned off)
 //---------------------------------------------------------------------------------
 void CServerPlugin::Unload(void)
