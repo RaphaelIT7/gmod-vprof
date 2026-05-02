@@ -5,10 +5,23 @@
 #include <sstream>
 #include <filesystem.h>
 #include <string>
+#include <map>
 #include <chrono>
 #include <ctime>
 #include <iomanip>
 #include <tier0/dbg.h>
+
+extern std::map<std::string, std::string> CallFunctionProtected_strs;
+
+static void ReplaceAll(std::string& str, const std::string& from, const std::string& to)
+{
+	size_t pos = 0;
+	while ((pos = str.find(from, pos)) != std::string::npos)
+	{
+		str.replace(pos, from.size(), to);
+		pos += to.size();
+	}
+}
 
 ConVar vprof_exportreport("vprof_exportreport", "1");
 
@@ -50,7 +63,14 @@ void FinishDump()
 	if (fh)
 	{
 		std::string str = ss.str();
-		fs->Write(str.c_str(), str.length(), fh);  
+
+		for (auto& kv : CallFunctionProtected_strs)
+		{
+			if (kv.second.size() > 52)
+				ReplaceAll(str, kv.second.substr(0, 52), kv.second);
+		}
+
+		fs->Write(str.c_str(), str.length(), fh);
 		Msg("Wrote vprof report into %s\n", filename.c_str());
 
 		fs->Close(fh);
