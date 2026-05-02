@@ -184,7 +184,7 @@ bool hook_CLuaInterface_CallFunctionProtected(void* self, int iArgs, int iRets, 
 		const char* src = ar.short_src[0] ? ar.short_src : "?";
 		if (strncmp(src, "addons/", 7) == 0)
 			src += 7;
-		std::string label = "Lua:CFP (";
+		std::string label = "LUA(";
 		label += src;
 		if (ar.linedefined > 0)
 		{
