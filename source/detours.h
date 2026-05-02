@@ -71,7 +71,7 @@ const Symbol CLuaGamemode_CallFinishSym = Symbol::FromName("_ZN12CLuaGamemode10C
 const Symbol CLuaGamemode_CallWithArgsSym = Symbol::FromName("_ZN12CLuaGamemode12CallWithArgsEi");
 const Symbol CLuaGamemode_CallSym = Symbol::FromName("_ZN12CLuaGamemode4CallEi");
 const Symbol CVProfile_OutputReportSym = Symbol::FromName("_ZN9CVProfile12OutputReportEiPKci");
-const Symbol CLuaInterface_CallFunctionProtectedSym = Symbol::FromName("_ZN12CLuaInterface20CallFunctionProtectedEiib");
+const Symbol CLuaInterface_CallFunctionProtectedSym = Symbol::FromName("_ZN13CLuaInterface21CallFunctionProtectedEiib");
 #else
 const Symbol CLuaGamemode_CallFinishSym = Symbol::FromSignature("");
 const Symbol CLuaGamemode_CallWithArgsSym = Symbol::FromSignature("");
