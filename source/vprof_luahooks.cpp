@@ -57,7 +57,9 @@ void CheckLua()
 
 #ifdef SYSTEM_WINDOWS
 std::map<int, std::string> Call_strs;
-std::map<std::string, std::string> CallFunctionProtected_strs;
+std::map<std::string, std::string> CallFunctionProtected_ids;  // key -> short id
+std::map<std::string, std::string> CallFunctionProtected_labels; // short id -> full label
+static int cfp_counter = 0;
 class CLuaInterfaceProxy : public Detouring::ClassProxy<GarrysMod::Lua::CLuaInterface, CLuaInterfaceProxy> {
 public:
 	CLuaInterfaceProxy(GarrysMod::Lua::CLuaInterface* LUA) {
@@ -96,22 +98,22 @@ public:
 		key += ":";
 		key += std::to_string(ar.linedefined);
 
-		auto it = CallFunctionProtected_strs.find(key);
-		if (it == CallFunctionProtected_strs.end())
+		auto it = CallFunctionProtected_ids.find(key);
+		if (it == CallFunctionProtected_ids.end())
 		{
 			const char* src = ar.short_src[0] ? ar.short_src : "?";
 			if (strncmp(src, "addons/", 7) == 0)
 				src += 7;
-			std::string label = "Lua:CFP (";
-			label += src;
-			if (ar.linedefined > 0)
-			{
-				label += ":";
-				label += std::to_string(ar.linedefined);
-			}
-			label += ")";
-			CallFunctionProtected_strs[key] = label;
-			it = CallFunctionProtected_strs.find(key);
+			char id[16];
+			snprintf(id, sizeof(id), "LUA#%04d", cfp_counter++);
+			std::string full = "LUA(";
+			full += (ar.linedefined > 0) ? std::to_string(ar.linedefined) : "?";
+			full += "@";
+			full += src;
+			full += ")";
+			CallFunctionProtected_ids[key] = id;
+			CallFunctionProtected_labels[id] = std::move(full);
+			it = CallFunctionProtected_ids.find(key);
 		}
 
 		VPROF_BUDGET( it->second.c_str(), "GMOD" );
@@ -165,7 +167,9 @@ void* hook_CLuaGamemode_Call(void* funky_srv, int pool)
 	return detour_CLuaGamemode_Call.GetTrampoline<CLuaGamemode_Call>()(funky_srv, pool);
 }
 
-std::map<std::string, std::string> CallFunctionProtected_strs;
+std::map<std::string, std::string> CallFunctionProtected_ids;  // key -> short id
+std::map<std::string, std::string> CallFunctionProtected_labels; // short id -> full label
+static int cfp_counter = 0;
 bool hook_CLuaInterface_CallFunctionProtected(void* self, int iArgs, int iRets, bool bShowError)
 {
 	CheckLua();
@@ -178,22 +182,22 @@ bool hook_CLuaInterface_CallFunctionProtected(void* self, int iArgs, int iRets, 
 	key += ":";
 	key += std::to_string(ar.linedefined);
 
-	auto it = CallFunctionProtected_strs.find(key);
-	if (it == CallFunctionProtected_strs.end())
+	auto it = CallFunctionProtected_ids.find(key);
+	if (it == CallFunctionProtected_ids.end())
 	{
 		const char* src = ar.short_src[0] ? ar.short_src : "?";
 		if (strncmp(src, "addons/", 7) == 0)
 			src += 7;
-		std::string label = "LUA(";
-		label += src;
-		if (ar.linedefined > 0)
-		{
-			label += ":";
-			label += std::to_string(ar.linedefined);
-		}
-		label += ")";
-		CallFunctionProtected_strs[key] = label;
-		it = CallFunctionProtected_strs.find(key);
+		char id[16];
+		snprintf(id, sizeof(id), "LUA#%04d", cfp_counter++);
+		std::string full = "LUA(";
+		full += (ar.linedefined > 0) ? std::to_string(ar.linedefined) : "?";
+		full += "@";
+		full += src;
+		full += ")";
+		CallFunctionProtected_ids[key] = id;
+		CallFunctionProtected_labels[id] = std::move(full);
+		it = CallFunctionProtected_ids.find(key);
 	}
 
 	VPROF_BUDGET( it->second.c_str(), "GMOD" );
