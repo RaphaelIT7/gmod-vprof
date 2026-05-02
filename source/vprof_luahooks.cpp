@@ -99,13 +99,15 @@ public:
 		auto it = CallFunctionProtected_strs.find(key);
 		if (it == CallFunctionProtected_strs.end())
 		{
-			std::string label = "CLuaInterface::CallFunctionProtected (";
+			std::string label = "Lua:CFP (";
 			if (ar.name && ar.name[0])
 				label += ar.name;
 			else
 				label += "anonymous";
 			label += " @ ";
-			label += ar.short_src[0] ? ar.short_src : "?";
+			const char* src = ar.short_src[0] ? ar.short_src : "?";
+			const char* lastSlash = strrchr(src, '/');
+			label += lastSlash ? lastSlash + 1 : src;
 			if (ar.linedefined > 0)
 			{
 				label += ":";
@@ -183,13 +185,15 @@ bool hook_CLuaInterface_CallFunctionProtected(void* self, int iArgs, int iRets, 
 	auto it = CallFunctionProtected_strs.find(key);
 	if (it == CallFunctionProtected_strs.end())
 	{
-		std::string label = "CLuaInterface::CallFunctionProtected (";
+		std::string label = "Lua:CFP (";
 		if (ar.name && ar.name[0])
 			label += ar.name;
 		else
 			label += "anonymous";
 		label += " @ ";
-		label += ar.short_src[0] ? ar.short_src : "?";
+		const char* src = ar.short_src[0] ? ar.short_src : "?";
+		const char* lastSlash = strrchr(src, '/');
+		label += lastSlash ? lastSlash + 1 : src;
 		if (ar.linedefined > 0)
 		{
 			label += ":";
