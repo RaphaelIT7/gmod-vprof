@@ -106,7 +106,7 @@ public:
 				src += 7;
 			char id[16];
 			snprintf(id, sizeof(id), "LUA#%04d", cfp_counter++);
-			std::string full = "LUA(";
+			std::string full = "CLuaInterface::CallFunctionProtected(";
 			full += (ar.linedefined > 0) ? std::to_string(ar.linedefined) : "?";
 			full += "@";
 			full += src;
@@ -190,7 +190,7 @@ bool hook_CLuaInterface_CallFunctionProtected(void* self, int iArgs, int iRets, 
 			src += 7;
 		char id[16];
 		snprintf(id, sizeof(id), "LUA#%04d", cfp_counter++);
-		std::string full = "LUA(";
+		std::string full = "CLuaInterface::CallFunctionProtected(";
 		full += src;
 		full += ":";
 		full += (ar.linedefined > 0) ? std::to_string(ar.linedefined) : "?";
