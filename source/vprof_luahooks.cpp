@@ -232,5 +232,6 @@ void RemoveLuaHooks()
 	CLuaInterfaceProxy::Singleton.reset();
 #else
 	RemoveDetours(DETOUR_LUAHOOKS);
+	gLUA = nullptr;
 #endif
 }
