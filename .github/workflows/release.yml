@@ -18,6 +18,8 @@ on:
 
 jobs:
   release:
+    permissions:
+      contents: write
     uses: RaphaelIT7/gmod-common-module-base/.github/workflows/compile-release.yml@workflow
     with:
       PROJECT_NAME: "vprof"
