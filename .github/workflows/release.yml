@@ -1,0 +1,31 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      RELEASE_LATEST:
+        description: "Mark as latest release"
+        type: boolean
+        default: true
+      RELEASE_PRE:
+        description: "Mark as pre-release"
+        type: boolean
+        default: false
+      RELEASE_DRAFT:
+        description: "Create as draft"
+        type: boolean
+        default: false
+
+jobs:
+  release:
+    permissions:
+      contents: write
+    uses: RaphaelIT7/gmod-common-module-base/.github/workflows/compile-release.yml@workflow
+    with:
+      PROJECT_NAME: "vprof"
+      BUILD_64x: "false"
+      REALM: "sv"
+      BUILD_WINDOWS: "false"
+      RELEASE_LATEST: ${{ inputs.RELEASE_LATEST }}
+      RELEASE_PRE: ${{ inputs.RELEASE_PRE }}
+      RELEASE_DRAFT: ${{ inputs.RELEASE_DRAFT }}

@@ -51,6 +51,7 @@ typedef void* (GMCOMMON_CALLING_CONVENTION* CLuaGamemode_CallFinish)(void* srv, 
 typedef void* (GMCOMMON_CALLING_CONVENTION* CLuaGamemode_CallWithArgs)(void* srv, int pool);
 typedef void* (GMCOMMON_CALLING_CONVENTION* CLuaGamemode_Call)(void* srv, int pool);
 typedef void (GMCOMMON_CALLING_CONVENTION* CVProfile_OutputReport)(void* srv, int, const tchar*, int);
+typedef bool (GMCOMMON_CALLING_CONVENTION* CLuaInterface_CallFunctionProtected)(void* self, int iArgs, int iRets, bool bShowError);
 
 #ifdef SYSTEM_WINDOWS
 #ifdef ARCHITECTURE_X86
@@ -70,9 +71,11 @@ const Symbol CLuaGamemode_CallFinishSym = Symbol::FromName("_ZN12CLuaGamemode10C
 const Symbol CLuaGamemode_CallWithArgsSym = Symbol::FromName("_ZN12CLuaGamemode12CallWithArgsEi");
 const Symbol CLuaGamemode_CallSym = Symbol::FromName("_ZN12CLuaGamemode4CallEi");
 const Symbol CVProfile_OutputReportSym = Symbol::FromName("_ZN9CVProfile12OutputReportEiPKci");
+const Symbol CLuaInterface_CallFunctionProtectedSym = Symbol::FromName("_ZN13CLuaInterface21CallFunctionProtectedEiib");
 #else
 const Symbol CLuaGamemode_CallFinishSym = Symbol::FromSignature("");
 const Symbol CLuaGamemode_CallWithArgsSym = Symbol::FromSignature("");
 const Symbol CLuaGamemode_CallSym = Symbol::FromSignature("");
+const Symbol CLuaInterface_CallFunctionProtectedSym = Symbol::FromSignature("");
 #endif
 #endif

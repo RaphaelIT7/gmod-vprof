@@ -9,13 +9,15 @@ Currently, this module adds two new convars.
 Causes VProf to show the name of the Lua hooks getting called.  
 > Gmod request: https://github.com/Facepunch/garrysmod-requests/issues/2374
 
+`CLuaInterface::CallFunctionProtected` entries show the source file and line number of the called function (e.g. `CLuaInterface::CallFunctionProtected(gamemode/init.lua:42)`). In the exported report, short IDs like `LUA#0001` are replaced with the full label.
+
 #### Example on Linux
 `CLuaGamemode::Call` is listed twice because the first one is our custom one and the second one is the original.
 ```lua
        |  |  |  |  |  |  CLuaGamemode::Call (Think)
        |  |  |  |  |  |  |  CLuaGamemode::Call
        |  |  |  |  |  |  |  |  CBaseLuaInterface::GetType
-       |  |  |  |  |  |  |  |  CLuaInterface::CallFunctionProtected
+       |  |  |  |  |  |  |  |  CLuaInterface::CallFunctionProtected(gamemode/init.lua:42)
 ```
 
 #### Example on Windows
@@ -25,7 +27,7 @@ So now you see the hook name in `CLuaInterface::PushPooledString (Hook name here
 |  |  CLuaGamemode::Call
 |  |  |  CLuaInterface::PushPooledString (Tick)
 |  |  |  CBaseLuaInterface::GetType
-|  |  |  CLuaInterface::CallFunctionProtected
+|  |  |  CLuaInterface::CallFunctionProtected(42@gamemode/init.lua)
 |  |  |  CLuaInterface::PushPooledString (Think)
 ```
 

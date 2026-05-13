@@ -16,3 +16,4 @@ jobs:
       BUILD_64x: "false"
       REALM: "sv"
       ARTIFACT_EXPIRE: "1"
+      BUILD_WINDOWS: "false"

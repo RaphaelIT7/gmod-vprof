@@ -5,10 +5,13 @@
 #include <sstream>
 #include <filesystem.h>
 #include <string>
+#include <map>
 #include <chrono>
 #include <ctime>
 #include <iomanip>
 #include <tier0/dbg.h>
+
+extern std::map<std::string, std::string> CallFunctionProtected_labels;
 
 ConVar vprof_exportreport("vprof_exportreport", "1");
 
@@ -50,7 +53,19 @@ void FinishDump()
 	if (fh)
 	{
 		std::string str = ss.str();
-		fs->Write(str.c_str(), str.length(), fh);  
+
+		// Replace short IDs (e.g. LUA#0001) with their full labels
+		for (auto& kv : CallFunctionProtected_labels)
+		{
+			size_t pos = 0;
+			while ((pos = str.find(kv.first, pos)) != std::string::npos)
+			{
+				str.replace(pos, kv.first.size(), kv.second);
+				pos += kv.second.size();
+			}
+		}
+
+		fs->Write(str.c_str(), str.length(), fh);
 		Msg("Wrote vprof report into %s\n", filename.c_str());
 
 		fs->Close(fh);
