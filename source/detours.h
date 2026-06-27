@@ -46,7 +46,7 @@ extern void RemoveDetours(DETOUR_CATEGOY category);
 #define GMCOMMON_CALLING_CONVENTION
 #endif
 
-typedef void (GMCOMMON_CALLING_CONVENTION* TMsg)(PRINTF_FORMAT_STRING const tchar* pMsgFormat, ...);
+typedef void (*TMsg)(PRINTF_FORMAT_STRING const tchar* pMsgFormat, ...);
 typedef void* (GMCOMMON_CALLING_CONVENTION* CLuaGamemode_CallFinish)(void* srv, int pool);
 typedef void* (GMCOMMON_CALLING_CONVENTION* CLuaGamemode_CallWithArgs)(void* srv, int pool);
 typedef void* (GMCOMMON_CALLING_CONVENTION* CLuaGamemode_Call)(void* srv, int pool);

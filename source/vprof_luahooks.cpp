@@ -2,15 +2,16 @@
 #include <GarrysMod/Lua/LuaShared.h>
 #include <GarrysMod/FactoryLoader.hpp>
 #include <GarrysMod/Lua/LuaInterface.h>
+#include "unordered_stuff.h"
 #include "main.h"
 #include "detours.h"
 #include <memory>
 #include <vprof.h>
-#include <map>
 #include <string>
 
 // Minimal lua_Debug definition matching GarrysMod's LuaJIT (LUA_IDSIZE = 128)
-struct lua_Debug {
+struct lua_Debug
+{
 	int event;
 	const char* name;
 	const char* namewhat;
@@ -42,23 +43,21 @@ Detouring::Hook detour_CLuaInterface_CallFunctionProtected;
 GarrysMod::Lua::CLuaInterface* gLUA;
 void CheckLua()
 {
-	if (!gLUA)
-	{
-		SourceSDK::FactoryLoader lua_shared_loader("lua_shared");
-		GarrysMod::Lua::ILuaShared* shared = lua_shared_loader.GetInterface<GarrysMod::Lua::ILuaShared>(GMOD_LUASHARED_INTERFACE);
-		gLUA = (GarrysMod::Lua::CLuaInterface*)shared->GetLuaInterface(GarrysMod::Lua::State::SERVER);
+	if (gLUA)
+		return;
 
-		if (!gLUA)
-		{
-			Msg("Failed to get ILuaInterface!. Were about to crash with this one\n");
-		}
-	}
+	SourceSDK::FactoryLoader lua_shared_loader("lua_shared");
+	GarrysMod::Lua::ILuaShared* shared = lua_shared_loader.GetInterface<GarrysMod::Lua::ILuaShared>(GMOD_LUASHARED_INTERFACE);
+	gLUA = (GarrysMod::Lua::CLuaInterface*)shared->GetLuaInterface(GarrysMod::Lua::State::SERVER);
+
+	if (!gLUA)
+		Msg("Failed to get ILuaInterface!. Were about to crash with this one\n");
 }
 
 #ifdef SYSTEM_WINDOWS
-std::map<int, std::string> Call_strs;
-std::map<std::string, std::string> CallFunctionProtected_ids;  // key -> short id
-std::map<std::string, std::string> CallFunctionProtected_labels; // short id -> full label
+unordered_map<int, std::string> Call_strs;
+unordered_map<std::string, std::string, StringHash, StringEq> CallFunctionProtected_ids;  // key -> short id
+unordered_map<std::string, std::string, StringHash, StringEq> CallFunctionProtected_labels; // short id -> full label
 static int cfp_counter = 0;
 class CLuaInterfaceProxy : public Detouring::ClassProxy<GarrysMod::Lua::CLuaInterface, CLuaInterfaceProxy> {
 public:
@@ -91,8 +90,8 @@ public:
 	virtual bool GMCOMMON_CALLING_CONVENTION CallFunctionProtected(int iArgs, int iRets, bool bShowErrors)
 	{
 		lua_Debug ar = {};
-		Push(-(iArgs + 1));
-		GetInfo(">Sn", &ar);
+		This()->Push(-(iArgs + 1));
+		This()->GetInfo(">Sn", &ar);
 
 		std::string key(ar.short_src);
 		key += ":";
@@ -125,7 +124,7 @@ public:
 };
 std::unique_ptr<CLuaInterfaceProxy> CLuaInterfaceProxy::Singleton;
 #else
-std::map<int, std::string> CallFinish_strs;
+unordered_map<int, std::string> CallFinish_strs;
 void* hook_CLuaGamemode_CallFinish(void* funky_srv, int pool)
 {
 	CheckLua();
@@ -139,7 +138,7 @@ void* hook_CLuaGamemode_CallFinish(void* funky_srv, int pool)
 	return detour_CLuaGamemode_CallFinish.GetTrampoline<CLuaGamemode_CallFinish>()(funky_srv, pool);
 }
 
-std::map<int, std::string> CallWithArgs_strs;
+unordered_map<int, std::string> CallWithArgs_strs;
 void* hook_CLuaGamemode_CallWithArgs(void* funky_srv, int pool)
 {
 	CheckLua();
@@ -153,7 +152,7 @@ void* hook_CLuaGamemode_CallWithArgs(void* funky_srv, int pool)
 	return detour_CLuaGamemode_CallWithArgs.GetTrampoline<CLuaGamemode_CallWithArgs>()(funky_srv, pool);
 }
 
-std::map<int, std::string> Call_strs;
+unordered_map<int, std::string> Call_strs;
 void* hook_CLuaGamemode_Call(void* funky_srv, int pool)
 {
 	CheckLua();
@@ -167,8 +166,8 @@ void* hook_CLuaGamemode_Call(void* funky_srv, int pool)
 	return detour_CLuaGamemode_Call.GetTrampoline<CLuaGamemode_Call>()(funky_srv, pool);
 }
 
-std::map<std::string, std::string> CallFunctionProtected_ids;  // key -> short id
-std::map<std::string, std::string> CallFunctionProtected_labels; // short id -> full label
+unordered_map<std::string, std::string, StringHash, StringEq> CallFunctionProtected_ids;  // key -> short id
+unordered_map<std::string, std::string, StringHash, StringEq> CallFunctionProtected_labels; // short id -> full label
 static int cfp_counter = 0;
 bool hook_CLuaInterface_CallFunctionProtected(void* self, int iArgs, int iRets, bool bShowError)
 {

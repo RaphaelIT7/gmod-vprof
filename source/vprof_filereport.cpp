@@ -1,17 +1,17 @@
 #include <GarrysMod/InterfacePointers.hpp>
+#include <unordered_stuff.h>
 #include "main.h"
 #include "detours.h"
 #include <vprof.h>
 #include <sstream>
 #include <filesystem.h>
 #include <string>
-#include <map>
 #include <chrono>
 #include <ctime>
 #include <iomanip>
 #include <tier0/dbg.h>
 
-extern std::map<std::string, std::string> CallFunctionProtected_labels;
+extern unordered_map<std::string, std::string, StringHash, StringEq> CallFunctionProtected_labels;
 
 ConVar vprof_exportreport("vprof_exportreport", "1");
 
